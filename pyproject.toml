@@ -1,7 +1,7 @@
 [project]
-name = "serialization-benchmark"
+name = "python-serialization-comparison"
 version = "0.1.0"
-description = "Benchmark comparing marshmallow, marshmallow-recipe, and pydantic serialization performance"
+description = "Comparison of marshmallow, marshmallow-recipe, and pydantic — performance, features, and size"
 requires-python = ">=3.11"
 dependencies = [
     "marshmallow>=3.20",

@@ -1,6 +1,6 @@
-# serialization-benchmark
+# python-serialization-comparison
 
-Benchmark comparing **marshmallow**, **marshmallow-recipe**, and **pydantic** serialization performance on deeply nested dataclass models.
+Comparison of **marshmallow**, **marshmallow-recipe**, and **pydantic** — performance benchmarks, feature matrix, and installed size.
 
 All libraries operate on the same plain `@dataclasses.dataclass` types — no library-specific model definitions.
 
