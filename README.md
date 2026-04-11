@@ -32,7 +32,7 @@ A single `Organization` object contains **2 departments x 2 teams x 2 employees*
 |---|---|---|---|
 | **marshmallow** | 3.26.2 | Pure Python | Hand-written `Schema` classes with `@post_load` |
 | **marshmallow-recipe** | 0.0.93 | Pure Python | `mr.dump(obj)` / `mr.load(Cls, data)` — auto-generated from dataclasses |
-| **marshmallow-recipe (nuked)** | 0.0.93 | Optimized Python | `mr.nuked.dump(Cls, obj)` / `mr.nuked.load(Cls, data)` |
+| **marshmallow-recipe (nuked)** | 0.0.93 | Rust (PyO3) | `mr.nuked.dump(Cls, obj)` / `mr.nuked.load(Cls, data)` |
 | **pydantic** | 2.12.5 | Rust (pydantic-core) | `TypeAdapter(Cls).dump_python(obj)` / `.validate_python(data)` |
 
 ## Test conditions
@@ -111,7 +111,7 @@ A single `Organization` object contains **2 departments x 2 teams x 2 employees*
 ### Key takeaways
 
 - **pydantic v2** is the fastest overall (9-38x over marshmallow), powered by its Rust core
-- **marshmallow-recipe nuked** is a strong second (7-27x over marshmallow), pure Python
+- **marshmallow-recipe nuked** is a strong second (7-27x over marshmallow), powered by Rust via PyO3
 - **marshmallow-recipe standard** (`mr.dump`/`mr.load`) is ~5-6x *slower* than raw marshmallow for dump, roughly equal for load
 - The **nuked** backend of marshmallow-recipe is 21-56x faster than its standard backend
 - Performance gaps **widen with deeper nesting** compared to flat models
