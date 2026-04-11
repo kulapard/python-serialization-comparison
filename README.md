@@ -108,6 +108,24 @@ A single `Organization` object contains **2 departments x 2 teams x 2 employees*
 └─────────────┴───────────┴─────────────────┴─────────┘
 ```
 
+### Installed size
+
+```
+┌───────────────────────────────────────┬────────┬──────────────────────────────────────┐
+│ Library (with dependencies)           │ Total  │ Breakdown                            │
+├───────────────────────────────────────┼────────┼──────────────────────────────────────┤
+│ marshmallow                           │ 0.4 MB │ marshmallow 0.4 MB                   │
+├───────────────────────────────────────┼────────┼──────────────────────────────────────┤
+│ marshmallow-recipe (+ marshmallow)    │ 1.7 MB │ mr-recipe 1.3 MB + marshmallow 0.4 MB│
+├───────────────────────────────────────┼────────┼──────────────────────────────────────┤
+│ pydantic (+ pydantic-core)            │ 8.1 MB │ pydantic 3.8 MB + core 4.4 MB        │
+└───────────────────────────────────────┴────────┴──────────────────────────────────────┘
+```
+
+Rust binary (`.so`) sizes:
+- **marshmallow-recipe** `_nuked.so` — 0.7 MB
+- **pydantic-core** `_pydantic_core.so` — 4.0 MB
+
 ### Key takeaways
 
 - **pydantic v2** is the fastest overall (9-38x over marshmallow), powered by its Rust core
