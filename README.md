@@ -126,6 +126,101 @@ Rust binary (`.so`) sizes:
 - **marshmallow-recipe** `_nuked.so` — 0.7 MB
 - **pydantic-core** `_pydantic_core.so` — 4.0 MB
 
+## Feature comparison
+
+### Schema definition
+
+| Feature | marshmallow | marshmallow-recipe | pydantic |
+|---|:---:|:---:|:---:|
+| Hand-written schemas | Yes | — | Yes (`BaseModel`) |
+| Auto from dataclasses | — | Yes | Yes (`TypeAdapter`) |
+| Auto from TypedDict | — | — | Yes |
+| Dynamic model creation | — | — | Yes (`create_model()`) |
+| Generic models | — | — | Yes (`Generic[T]`) |
+| Computed fields | — | — | Yes (`@computed_field`) |
+
+### Validation
+
+| Feature | marshmallow | marshmallow-recipe | pydantic |
+|---|:---:|:---:|:---:|
+| Built-in validators | Range, Length, OneOf, NoneOf, Equal, Regexp, URL, Email | regexp, email | All via `Annotated` constraints (`gt`, `lt`, `min_length`, `pattern`, ...) |
+| Custom validators | `@validates`, `@validates_schema` | `mr.validate(fn)` | `@field_validator`, `@model_validator` |
+| Before/after modes | — | — | Yes (`mode='before'`/`'after'`/`'wrap'`) |
+| Strict mode | — | — | Yes (global or per-field) |
+| Validate on assignment | — | — | Yes (`validate_assignment=True`) |
+| Validate defaults | — | — | Yes (`validate_default=True`) |
+| Fail fast (stop on first error) | — | — | Yes (`FailFast`) |
+
+### Serialization & deserialization
+
+| Feature | marshmallow | marshmallow-recipe | pydantic |
+|---|:---:|:---:|:---:|
+| Dump to dict | `schema.dump(obj)` | `mr.dump(obj)` | `adapter.dump_python(obj)` |
+| Load from dict | `schema.load(data)` | `mr.load(Cls, data)` | `adapter.validate_python(data)` |
+| Dump to JSON string | — | — | Yes (`dump_json()`) |
+| Load from JSON string | — | — | Yes (`validate_json()`) |
+| Load from string values | — | — | Yes (`validate_strings()`) |
+| Many (batch) | `many=True` | `dump_many()` / `load_many()` | Yes (via `TypeAdapter(list[T])`) |
+| Partial loading | Yes (`partial=True`) | — | — |
+| Nested objects | Yes (`Nested()`) | Yes (auto) | Yes (auto) |
+
+### Pre/post processing hooks
+
+| Feature | marshmallow | marshmallow-recipe | pydantic |
+|---|:---:|:---:|:---:|
+| `pre_load` | Yes | Yes (`@mr.pre_load`) | Yes (`mode='before'`) |
+| `post_load` | Yes | — | Yes (`model_post_init`) |
+| `pre_dump` | Yes | — | — |
+| `post_dump` | Yes | — | — |
+
+### Field types
+
+| Type | marshmallow | marshmallow-recipe | pydantic |
+|---|:---:|:---:|:---:|
+| str, int, float, bool | Yes | Yes | Yes |
+| Decimal | Yes | Yes | Yes |
+| datetime, date, time | Yes | Yes | Yes |
+| timedelta | Yes | — | Yes |
+| UUID | Yes | Yes | Yes |
+| Enum (str/int) | Yes | Yes | Yes |
+| list, set, frozenset | Yes | Yes | Yes |
+| dict | Yes | Yes | Yes |
+| tuple (homogeneous) | Yes | Yes | Yes |
+| tuple (heterogeneous) | Yes | Standard only | Yes |
+| Union | — | Yes | Yes |
+| Discriminated union | — | — | Yes |
+| Literal | — | Yes | Yes |
+| Optional | Yes | Yes | Yes |
+| bytes | Yes | Yes | Yes |
+| IP address / network | Yes | — | Yes |
+| URL | Yes | — | Yes |
+| Email (validated) | Yes | Yes (validator) | Yes (`EmailStr`) |
+| FilePath / DirectoryPath | — | — | Yes |
+| SecretStr / SecretBytes | — | — | Yes |
+| Json (raw) | — | Yes (`JsonRawField`) | Yes (`Json`) |
+| Base64 | — | — | Yes |
+| PaymentCardNumber | — | — | Yes |
+
+### Naming & aliasing
+
+| Feature | marshmallow | marshmallow-recipe | pydantic |
+|---|:---:|:---:|:---:|
+| Per-field alias | Yes (`data_key`) | Yes (`mr.meta(name=...)`) | Yes (`Field(alias=...)`) |
+| Separate validation/serialization alias | — | — | Yes |
+| camelCase convention | Manual | Yes (`CAMEL_CASE`) | Yes (`alias_generator`) |
+| UPPER_SNAKE_CASE | Manual | Yes (`UPPER_SNAKE_CASE`) | Yes (`alias_generator`) |
+| CapitalCamelCase | Manual | Yes (`CAPITAL_CAMEL_CASE`) | Yes (`alias_generator`) |
+
+### Ecosystem & integrations
+
+| Feature | marshmallow | marshmallow-recipe | pydantic |
+|---|:---:|:---:|:---:|
+| JSON Schema generation | Via plugin | Yes (`mr.json_schema()`) | Yes (built-in) |
+| OpenAPI support | Via apispec | — | Yes (built-in) |
+| Settings management | — | — | Via pydantic-settings |
+| `None` value handling | — | Yes (`NoneValueHandling`) | Yes (via serialization options) |
+| Unknown fields handling | RAISE / EXCLUDE / INCLUDE | — | `'forbid'` / `'ignore'` / `'allow'` |
+
 ### Key takeaways
 
 - **pydantic v2** is the fastest overall (9-38x over marshmallow), powered by its Rust core
