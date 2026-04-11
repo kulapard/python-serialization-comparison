@@ -54,7 +54,7 @@ A single `Organization` object contains **2 departments x 2 teams x 2 employees*
 | Machine | Apple M1 Pro, 32 GB RAM |
 | OS | macOS 26.3.1 (arm64) |
 | Python | 3.14.3 |
-| Timing | Median of adaptive runs (min 10 rounds, 2 s budget per benchmark) |
+| Timing | Median of adaptive runs (min 10 rounds, 10 s budget per benchmark) |
 | GC | Disabled during measurement |
 | Scales | 1, 100, 1000 objects per call |
 
