@@ -9,9 +9,14 @@ All libraries operate on the same 10-level-deep dataclass hierarchy.
 from __future__ import annotations
 
 import gc
+import os
+import platform
 import statistics
+import subprocess
+import sys
 import time
 import tracemalloc
+from datetime import datetime, timezone
 
 import marshmallow_recipe as mr
 import pydantic
@@ -202,11 +207,27 @@ def main():
     }
     lib_names = list(lib_runners.keys())
 
+    # Print system info
+    cpu = platform.processor() or platform.machine()
+    if platform.system() == "Darwin":
+        try:
+            cpu = subprocess.run(
+                ["sysctl", "-n", "machdep.cpu.brand_string"],
+                capture_output=True, text=True,
+            ).stdout.strip() or cpu
+        except FileNotFoundError:
+            pass
+    print()
+    print(f"  Date:    {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}")
+    print(f"  OS:      {platform.platform()}")
+    print(f"  CPU:     {cpu} ({os.cpu_count()} cores)")
+    print(f"  Python:  {sys.version.split()[0]}")
+    print()
+
     # Print versions and settings
     ma_ver = importlib.metadata.version("marshmallow")
     mr_ver = importlib.metadata.version("marshmallow-recipe")
     pyd_ver = importlib.metadata.version("pydantic")
-    print()
     print(f"  marshmallow        {ma_ver}")
     print(f"  marshmallow-recipe {mr_ver}")
     print(f"  pydantic           {pyd_ver}")
