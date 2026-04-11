@@ -115,35 +115,10 @@ class MaAccountSchema(ma.Schema):
 
 
 # ──────────────────────────────────────────────
-# 4. pydantic models
+# 4. pydantic TypeAdapter (reuses shared dataclasses)
 # ──────────────────────────────────────────────
 
-class PydAddress(pydantic.BaseModel):
-    street: str
-    city: str
-    zip_code: str
-    country: str
-
-
-class PydTransaction(pydantic.BaseModel):
-    id: str
-    amount: Decimal
-    currency: str
-    timestamp: datetime
-    description: Optional[str] = None
-
-
-class PydAccount(pydantic.BaseModel):
-    id: str
-    owner_name: str
-    email: str
-    balance: Decimal
-    status: AccountStatus
-    opened_at: date
-    address: PydAddress
-    tags: list[str]
-    transactions: list[PydTransaction]
-    note: Optional[str] = None
+AccountAdapter = pydantic.TypeAdapter(Account)
 
 
 # ──────────────────────────────────────────────
@@ -291,13 +266,12 @@ def run_load_mr_nuked(n: int):
 
 def run_dump_pydantic(n: int):
     objs = [make_account() for _ in range(n)]
-    pyd_objs = [PydAccount.model_validate(dataclasses.asdict(o)) for o in objs]
-    return bench(lambda: [o.model_dump(mode="python") for o in pyd_objs])
+    return bench(lambda: [AccountAdapter.dump_python(o) for o in objs])
 
 
 def run_load_pydantic(n: int):
     dicts = [make_account_dict() for _ in range(n)]
-    return bench(lambda: [PydAccount.model_validate(d) for d in dicts])
+    return bench(lambda: [AccountAdapter.validate_python(d) for d in dicts])
 
 
 # ──────────────────────────────────────────────
