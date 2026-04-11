@@ -11,6 +11,7 @@ from __future__ import annotations
 import gc
 import statistics
 import time
+import tracemalloc
 
 import marshmallow_recipe as mr
 import pydantic
@@ -26,16 +27,25 @@ OrgAdapter = pydantic.TypeAdapter(Organization)
 # ──────────────────────────────────────────────
 
 class BenchResult:
-    __slots__ = ("median", "rounds", "total_time")
+    __slots__ = ("median", "rounds", "total_time", "peak_memory")
 
-    def __init__(self, median: float, rounds: int, total_time: float):
+    def __init__(self, median: float, rounds: int, total_time: float, peak_memory: int):
         self.median = median
         self.rounds = rounds
         self.total_time = total_time
+        self.peak_memory = peak_memory  # bytes
 
 
 def bench(fn, *, min_rounds: int = 10, max_rounds: int = 500, budget: float = 10.0) -> BenchResult:
-    """Return benchmark result with median time, round count, and wall time."""
+    """Return benchmark result with median time, round count, wall time, and peak memory."""
+    # Measure peak memory on a single call
+    gc.collect()
+    tracemalloc.start()
+    fn()
+    _, peak_memory = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+
+    # Measure time
     gc.disable()
     try:
         times: list[float] = []
@@ -50,7 +60,7 @@ def bench(fn, *, min_rounds: int = 10, max_rounds: int = 500, budget: float = 10
         total_time = time.perf_counter() - t_start
     finally:
         gc.enable()
-    return BenchResult(statistics.median(times), len(times), total_time)
+    return BenchResult(statistics.median(times), len(times), total_time, peak_memory)
 
 
 def fmt_time(seconds: float) -> str:
@@ -61,6 +71,16 @@ def fmt_time(seconds: float) -> str:
     if ms < 1000:
         return f"{ms:.1f} ms"
     return f"{seconds:.2f} s"
+
+
+def fmt_mem(nbytes: int) -> str:
+    if nbytes < 1024:
+        return f"{nbytes} B"
+    kb = nbytes / 1024
+    if kb < 1024:
+        return f"{kb:.1f} KB"
+    mb = kb / 1024
+    return f"{mb:.1f} MB"
 
 
 def speedup_str(base: float, other: float) -> str:
@@ -182,22 +202,30 @@ def main():
     print(f"  pydantic           {pyd_ver}")
     print()
 
-    # Collect results: results[op][n][lib] = seconds
+    # Collect results
     results: dict[str, dict[int, dict[str, float]]] = {}
+    memory: dict[str, dict[int, dict[str, int]]] = {}
     total = len(operations) * len(scales) * len(lib_names)
     done = 0
 
     for op in operations:
         results[op] = {}
+        memory[op] = {}
         for n in scales:
             results[op][n] = {}
+            memory[op][n] = {}
             for lib in lib_names:
                 done += 1
                 tag = f"{op} x {n:<4} [{lib}]"
                 print(f"  [{done:>2}/{total}] {tag:40s} ...", end="", flush=True)
                 r = lib_runners[lib][op](n)
                 results[op][n][lib] = r.median
-                print(f" {fmt_time(r.median):>10s}  ({r.rounds} rounds in {fmt_time(r.total_time)})")
+                memory[op][n][lib] = r.peak_memory
+                print(
+                    f" {fmt_time(r.median):>10s}"
+                    f"  ({r.rounds} rounds in {fmt_time(r.total_time)},"
+                    f" peak {fmt_mem(r.peak_memory)})"
+                )
 
     # ── Pairwise comparison tables ──
     comparisons = [
@@ -259,6 +287,23 @@ def main():
             rows.append(cells)
 
     print(f"  Speedup (vs {baseline})")
+    print()
+    for line in render_table(rows, headers).splitlines():
+        print(f"  {line}")
+    print()
+
+    # ── Peak memory table ──
+    headers = ["Operation"] + lib_names
+    rows = []
+    for op in operations:
+        for n in scales:
+            cells = [f"{op} x {n}"]
+            for lib in lib_names:
+                cells.append(fmt_mem(memory[op][n][lib]))
+            rows.append(cells)
+
+    print()
+    print("  Peak memory (single call)")
     print()
     for line in render_table(rows, headers).splitlines():
         print(f"  {line}")
