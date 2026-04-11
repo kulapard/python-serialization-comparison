@@ -2,11 +2,11 @@
 name = "python-serialization-comparison"
 version = "0.1.0"
 description = "Comparison of marshmallow, marshmallow-recipe, and pydantic — performance, features, and size"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
-    "marshmallow>=3.20",
-    "marshmallow-recipe>=0.36",
-    "pydantic>=2.0",
+    "marshmallow==3.26.2",
+    "marshmallow-recipe==0.0.93",
+    "pydantic==2.12.5",
 ]
 
 [project.scripts]
