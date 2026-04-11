@@ -25,11 +25,11 @@ OrgAdapter = pydantic.TypeAdapter(Organization)
 # 4. Benchmark harness
 # ──────────────────────────────────────────────
 
-def bench(fn, *, min_rounds: int = 10, budget: float = 10.0):
+def bench(fn, *, min_rounds: int = 10, max_rounds: int = 500, budget: float = 10.0):
     """Return median execution time in seconds.
 
     Runs at least *min_rounds* iterations but stops after *budget* seconds
-    of measurement to keep deep/large benchmarks practical.
+    or *max_rounds* iterations, whichever comes first.
     """
     gc.disable()
     try:
@@ -39,7 +39,7 @@ def bench(fn, *, min_rounds: int = 10, budget: float = 10.0):
             t0 = time.perf_counter()
             fn()
             times.append(time.perf_counter() - t0)
-            if len(times) >= 500:
+            if len(times) >= max_rounds:
                 break
     finally:
         gc.enable()
