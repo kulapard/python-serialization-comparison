@@ -4,6 +4,17 @@ Benchmark comparing **marshmallow**, **marshmallow-recipe**, and **pydantic** se
 
 All libraries operate on the same plain `@dataclasses.dataclass` types — no library-specific model definitions.
 
+## TL;DR
+
+| | marshmallow | marshmallow-recipe | mr-recipe nuked | pydantic |
+|---|:---:|:---:|:---:|:---:|
+| **Speed (vs marshmallow)** | 1x | ~1x load / 0.2x dump | 7-27x | 9-38x |
+| **Install size** | 0.4 MB | 1.7 MB | _(included)_ | 8.1 MB |
+| **Backend** | Pure Python | Pure Python | Rust (PyO3) | Rust (pydantic-core) |
+| **Schema definition** | Hand-written | Auto from dataclasses | _(same)_ | Auto (multiple ways) |
+| **Features** | Flexible hooks, plugins | Minimal, ergonomic | _(same)_ | Richest (JSON Schema, OpenAPI, strict mode, generics) |
+| **Best for** | Existing marshmallow codebases | Dataclass-centric projects on marshmallow | _(same, need speed)_ | New projects needing speed + features |
+
 ## Model structure
 
 A 10-level-deep `Organization` hierarchy with lists, nested objects, enums, `Decimal`, `date`, `datetime`, and `Optional` fields:
