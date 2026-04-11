@@ -20,19 +20,19 @@ All libraries operate on the same plain `@dataclasses.dataclass` types — no li
 A 10-level-deep `Organization` hierarchy with lists, nested objects, enums, `Decimal`, `date`, `datetime`, and `Optional` fields:
 
 ```
-Organization                          # L1
-└── Department                        # L2
-    └── Team                          # L3
-        └── Employee                  # L4
-            ├── Contract              # L5
-            │   └── Terms             # L6
-            │       └── Clause        # L7
-            └── Project               # L5
-                └── Task              # L6
-                    └── SubTask       # L7
-                        └── Comment   # L8
-                            └── Reaction  # L9
-                                └── Author    # L10
+L1   Organization
+L2   └── Department
+L3       └── Team
+L4           └── Employee
+L5               ├── Contract
+L6               │   └── Terms
+L7               │       └── Clause
+L5               └── Project
+L6                   └── Task
+L7                       └── SubTask
+L8                           └── Comment
+L9                               └── Reaction
+L10                                  └── Author
 ```
 
 Every dataclass has **10-13 fields** (str, int, bool, Decimal, date, datetime, Enum, Optional, list).
@@ -260,8 +260,13 @@ Rust binary (`.so`) sizes:
 ## Running
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install marshmallow marshmallow-recipe pydantic
-python3 bench.py
+make bench
+```
+
+This uses [uv](https://docs.astral.sh/uv/) to auto-install dependencies and run the benchmark.
+
+Or manually:
+
+```bash
+uv run bench.py
 ```
