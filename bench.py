@@ -66,48 +66,56 @@ def speedup_str(base: float, other: float) -> str:
 
 
 # ──────────────────────────────────────────────
-# 5. Runners
+# 5. Test data (generated once)
+# ──────────────────────────────────────────────
+
+SCALES = [1, 100, 1000]
+_objs: dict[int, list] = {n: [make_organization() for _ in range(n)] for n in SCALES}
+_dicts: dict[int, list[dict]] = {n: [make_organization_dict() for _ in range(n)] for n in SCALES}
+_ma_schema = MaOrganizationSchema()
+
+
+# ──────────────────────────────────────────────
+# 6. Runners
 # ──────────────────────────────────────────────
 
 def run_dump_marshmallow(n: int):
-    schema = MaOrganizationSchema()
-    objs = [make_organization() for _ in range(n)]
-    return bench(lambda: [schema.dump(o) for o in objs])
+    objs = _objs[n]
+    return bench(lambda: [_ma_schema.dump(o) for o in objs])
 
 
 def run_load_marshmallow(n: int):
-    schema = MaOrganizationSchema()
-    dicts = [make_organization_dict() for _ in range(n)]
-    return bench(lambda: [schema.load(d) for d in dicts])
+    dicts = _dicts[n]
+    return bench(lambda: [_ma_schema.load(d) for d in dicts])
 
 
 def run_dump_mr(n: int):
-    objs = [make_organization() for _ in range(n)]
+    objs = _objs[n]
     return bench(lambda: [mr.dump(o) for o in objs])
 
 
 def run_load_mr(n: int):
-    dicts = [make_organization_dict() for _ in range(n)]
+    dicts = _dicts[n]
     return bench(lambda: [mr.load(Organization, d) for d in dicts])
 
 
 def run_dump_mr_nuked(n: int):
-    objs = [make_organization() for _ in range(n)]
+    objs = _objs[n]
     return bench(lambda: [mr.nuked.dump(Organization, o) for o in objs])
 
 
 def run_load_mr_nuked(n: int):
-    dicts = [make_organization_dict() for _ in range(n)]
+    dicts = _dicts[n]
     return bench(lambda: [mr.nuked.load(Organization, d) for d in dicts])
 
 
 def run_dump_pydantic(n: int):
-    objs = [make_organization() for _ in range(n)]
+    objs = _objs[n]
     return bench(lambda: [OrgAdapter.dump_python(o) for o in objs])
 
 
 def run_load_pydantic(n: int):
-    dicts = [make_organization_dict() for _ in range(n)]
+    dicts = _dicts[n]
     return bench(lambda: [OrgAdapter.validate_python(d) for d in dicts])
 
 
@@ -146,7 +154,7 @@ def render_table(rows: list[list[str]], headers: list[str]) -> str:
 def main():
     import importlib.metadata
 
-    scales = [1, 100, 1000]
+    scales = SCALES
     operations = ["dump", "load"]
 
     lib_runners = {
