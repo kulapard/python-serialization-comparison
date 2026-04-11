@@ -3,207 +3,236 @@ Benchmark: marshmallow vs marshmallow-recipe vs pydantic
 ========================================================
 Compares dump (serialization) and load (deserialization) performance
 across three popular Python serialization libraries.
+All libraries operate on the same 10-level-deep dataclass hierarchy.
 """
 
 from __future__ import annotations
 
-import dataclasses
-import enum
 import gc
 import statistics
 import time
-import uuid
-from datetime import date, datetime
-from decimal import Decimal
-from typing import Optional
 
 import marshmallow as ma
 import marshmallow.fields as mf
 import marshmallow_recipe as mr
 import pydantic
 
-# ──────────────────────────────────────────────
-# 1. Shared domain model (plain dataclass)
-# ──────────────────────────────────────────────
+from models import (
+    Author,
+    Clause,
+    Comment,
+    Contract,
+    Department,
+    Employee,
+    Organization,
+    OrgType,
+    Priority,
+    Project,
+    Reaction,
 
-class AccountStatus(str, enum.Enum):
-    ACTIVE = "active"
-    SUSPENDED = "suspended"
-    CLOSED = "closed"
-
-
-@dataclasses.dataclass
-class Address:
-    street: str
-    city: str
-    zip_code: str
-    country: str
-
-
-@dataclasses.dataclass
-class Transaction:
-    id: str
-    amount: Decimal
-    currency: str
-    timestamp: datetime
-    description: Optional[str] = None
-
-
-@dataclasses.dataclass
-class Account:
-    id: str
-    owner_name: str
-    email: str
-    balance: Decimal
-    status: AccountStatus
-    opened_at: date
-    address: Address
-    tags: list[str]
-    transactions: list[Transaction]
-    note: Optional[str] = None
-
+    SubTask,
+    Task,
+    Team,
+    Terms,
+    make_organization,
+    make_organization_dict,
+)
 
 # ──────────────────────────────────────────────
-# 2. marshmallow schemas (hand-written)
+# 1. marshmallow schemas (hand-written, 10 levels)
 # ──────────────────────────────────────────────
 
-class MaAddressSchema(ma.Schema):
-    street = mf.String(required=True)
-    city = mf.String(required=True)
-    zip_code = mf.String(required=True)
-    country = mf.String(required=True)
+class MaAuthorSchema(ma.Schema):  # L10
+    id = mf.String(required=True)
+    username = mf.String(required=True)
+    display_name = mf.String(required=True)
+    verified = mf.Boolean(required=True)
 
     @ma.post_load
     def make(self, data, **_):
-        return Address(**data)
+        return Author(**data)
 
 
-class MaTransactionSchema(ma.Schema):
+class MaReactionSchema(ma.Schema):  # L9
     id = mf.String(required=True)
-    amount = mf.Decimal(required=True, as_string=True)
-    currency = mf.String(required=True)
-    timestamp = mf.DateTime(required=True)
-    description = mf.String(load_default=None, dump_default=None)
+    emoji = mf.String(required=True)
+    created_at = mf.DateTime(required=True)
+    author = mf.Nested(MaAuthorSchema, required=True)
 
     @ma.post_load
     def make(self, data, **_):
-        return Transaction(**data)
+        return Reaction(**data)
 
 
-class MaAccountSchema(ma.Schema):
+class MaCommentSchema(ma.Schema):  # L8
     id = mf.String(required=True)
-    owner_name = mf.String(required=True)
-    email = mf.Email(required=True)
-    balance = mf.Decimal(required=True, as_string=True)
-    status = mf.Enum(AccountStatus, by_value=True)
-    opened_at = mf.Date(required=True)
-    address = mf.Nested(MaAddressSchema, required=True)
+    text = mf.String(required=True)
+    created_at = mf.DateTime(required=True)
+    edited = mf.Boolean(required=True)
+    reactions = mf.List(mf.Nested(MaReactionSchema), required=True)
+
+    @ma.post_load
+    def make(self, data, **_):
+        return Comment(**data)
+
+
+class MaSubTaskSchema(ma.Schema):  # L7
+    id = mf.String(required=True)
+    title = mf.String(required=True)
+    done = mf.Boolean(required=True)
+    priority = mf.Enum(Priority, by_value=True)
+    comment = mf.Nested(MaCommentSchema, required=True)
+
+    @ma.post_load
+    def make(self, data, **_):
+        return SubTask(**data)
+
+
+class MaClauseSchema(ma.Schema):  # L7
+    id = mf.String(required=True)
+    title = mf.String(required=True)
+    body = mf.String(required=True)
+    mandatory = mf.Boolean(required=True)
+
+    @ma.post_load
+    def make(self, data, **_):
+        return Clause(**data)
+
+
+class MaTaskSchema(ma.Schema):  # L6
+    id = mf.String(required=True)
+    title = mf.String(required=True)
+    description = mf.String(required=True)
+    priority = mf.Enum(Priority, by_value=True)
+    due_date = mf.Date(required=True)
+    subtasks = mf.List(mf.Nested(MaSubTaskSchema), required=True)
+
+    @ma.post_load
+    def make(self, data, **_):
+        return Task(**data)
+
+
+class MaTermsSchema(ma.Schema):  # L6
+    id = mf.String(required=True)
+    effective_date = mf.Date(required=True)
+    governing_law = mf.String(required=True)
+    clauses = mf.List(mf.Nested(MaClauseSchema), required=True)
+
+    @ma.post_load
+    def make(self, data, **_):
+        return Terms(**data)
+
+
+class MaProjectSchema(ma.Schema):  # L5
+    id = mf.String(required=True)
+    name = mf.String(required=True)
+    budget = mf.Decimal(required=True, as_string=True)
+    started_at = mf.Date(required=True)
+    tasks = mf.List(mf.Nested(MaTaskSchema), required=True)
+
+    @ma.post_load
+    def make(self, data, **_):
+        return Project(**data)
+
+
+class MaContractSchema(ma.Schema):  # L5
+    id = mf.String(required=True)
+    title = mf.String(required=True)
+    signed_at = mf.DateTime(required=True)
+    value = mf.Decimal(required=True, as_string=True)
+    terms = mf.Nested(MaTermsSchema, required=True)
+
+    @ma.post_load
+    def make(self, data, **_):
+        return Contract(**data)
+
+
+class MaEmployeeSchema(ma.Schema):  # L4
+    id = mf.String(required=True)
+    name = mf.String(required=True)
+    email = mf.String(required=True)
+    hired_at = mf.Date(required=True)
+    salary = mf.Decimal(required=True, as_string=True)
+    contract = mf.Nested(MaContractSchema, required=True)
+    projects = mf.List(mf.Nested(MaProjectSchema), required=True)
     tags = mf.List(mf.String(), required=True)
-    transactions = mf.List(mf.Nested(MaTransactionSchema), required=True)
     note = mf.String(load_default=None, dump_default=None)
 
     @ma.post_load
     def make(self, data, **_):
-        return Account(**data)
+        return Employee(**data)
+
+
+class MaTeamSchema(ma.Schema):  # L3
+    id = mf.String(required=True)
+    name = mf.String(required=True)
+    lead_name = mf.String(required=True)
+    members = mf.List(mf.Nested(MaEmployeeSchema), required=True)
+
+    @ma.post_load
+    def make(self, data, **_):
+        return Team(**data)
+
+
+class MaDepartmentSchema(ma.Schema):  # L2
+    id = mf.String(required=True)
+    name = mf.String(required=True)
+    floor = mf.Integer(required=True)
+    teams = mf.List(mf.Nested(MaTeamSchema), required=True)
+
+    @ma.post_load
+    def make(self, data, **_):
+        return Department(**data)
+
+
+class MaOrganizationSchema(ma.Schema):  # L1
+    id = mf.String(required=True)
+    name = mf.String(required=True)
+    org_type = mf.Enum(OrgType, by_value=True)
+    founded = mf.Date(required=True)
+    departments = mf.List(mf.Nested(MaDepartmentSchema), required=True)
+
+    @ma.post_load
+    def make(self, data, **_):
+        return Organization(**data)
 
 
 # ──────────────────────────────────────────────
-# 3. marshmallow-recipe (uses top-level functions)
+# 2. marshmallow-recipe — auto-generated from dataclasses
 # ──────────────────────────────────────────────
-# mr.dump(obj), mr.load(Cls, data), mr.dump_many([...]), mr.load_many(Cls, [...])
-# mr.nuked.dump(Cls, obj), mr.nuked.load(Cls, data)  — faster "nuked" backend
-
-
-# ──────────────────────────────────────────────
-# 4. pydantic TypeAdapter (reuses shared dataclasses)
-# ──────────────────────────────────────────────
-
-AccountAdapter = pydantic.TypeAdapter(Account)
+# mr.dump(obj), mr.load(Cls, data)
+# mr.nuked.dump(Cls, obj), mr.nuked.load(Cls, data)
 
 
 # ──────────────────────────────────────────────
-# 5. Test data factories
+# 3. pydantic TypeAdapter (reuses shared dataclasses)
 # ──────────────────────────────────────────────
 
-def make_address() -> Address:
-    return Address(
-        street="123 Benchmark Lane",
-        city="Perfville",
-        zip_code="90210",
-        country="US",
-    )
-
-
-def make_transaction(i: int = 0) -> Transaction:
-    return Transaction(
-        id=str(uuid.UUID(int=i)),
-        amount=Decimal("49.99"),
-        currency="USD",
-        timestamp=datetime(2025, 6, 15, 12, 30, 0),
-        description=f"Payment #{i}",
-    )
-
-
-def make_account(n_txns: int = 3) -> Account:
-    return Account(
-        id="acc-001",
-        owner_name="Alice Bench",
-        email="alice@example.com",
-        balance=Decimal("12345.67"),
-        status=AccountStatus.ACTIVE,
-        opened_at=date(2024, 1, 15),
-        address=make_address(),
-        tags=["premium", "verified", "benchmark"],
-        transactions=[make_transaction(i) for i in range(n_txns)],
-        note="Benchmark test account",
-    )
-
-
-def make_account_dict() -> dict:
-    """Raw dict representation (as if received from an API)."""
-    return {
-        "id": "acc-001",
-        "owner_name": "Alice Bench",
-        "email": "alice@example.com",
-        "balance": "12345.67",
-        "status": "active",
-        "opened_at": "2024-01-15",
-        "address": {
-            "street": "123 Benchmark Lane",
-            "city": "Perfville",
-            "zip_code": "90210",
-            "country": "US",
-        },
-        "tags": ["premium", "verified", "benchmark"],
-        "transactions": [
-            {
-                "id": str(uuid.UUID(int=i)),
-                "amount": "49.99",
-                "currency": "USD",
-                "timestamp": "2025-06-15T12:30:00",
-                "description": f"Payment #{i}",
-            }
-            for i in range(3)
-        ],
-        "note": "Benchmark test account",
-    }
+OrgAdapter = pydantic.TypeAdapter(Organization)
 
 
 # ──────────────────────────────────────────────
-# 6. Benchmark harness
+# 4. Benchmark harness
 # ──────────────────────────────────────────────
 
-def bench(fn, *, warmup: int = 50, rounds: int = 200):
-    """Return median execution time in seconds."""
+def bench(fn, *, warmup: int = 5, min_rounds: int = 10, budget: float = 2.0):
+    """Return median execution time in seconds.
+
+    Runs at least *min_rounds* iterations but stops after *budget* seconds
+    of measurement to keep deep/large benchmarks practical.
+    """
     for _ in range(warmup):
         fn()
     gc.disable()
     try:
-        times = []
-        for _ in range(rounds):
+        times: list[float] = []
+        deadline = time.perf_counter() + budget
+        while len(times) < min_rounds or time.perf_counter() < deadline:
             t0 = time.perf_counter()
             fn()
             times.append(time.perf_counter() - t0)
+            if len(times) >= 500:
+                break
     finally:
         gc.enable()
     return statistics.median(times)
@@ -229,53 +258,53 @@ def speedup_str(base: float, other: float) -> str:
 
 
 # ──────────────────────────────────────────────
-# 7. Runners: each returns (name, seconds)
+# 5. Runners
 # ──────────────────────────────────────────────
 
 def run_dump_marshmallow(n: int):
-    schema = MaAccountSchema()
-    objs = [make_account() for _ in range(n)]
+    schema = MaOrganizationSchema()
+    objs = [make_organization() for _ in range(n)]
     return bench(lambda: [schema.dump(o) for o in objs])
 
 
 def run_load_marshmallow(n: int):
-    schema = MaAccountSchema()
-    dicts = [make_account_dict() for _ in range(n)]
+    schema = MaOrganizationSchema()
+    dicts = [make_organization_dict() for _ in range(n)]
     return bench(lambda: [schema.load(d) for d in dicts])
 
 
 def run_dump_mr(n: int):
-    objs = [make_account() for _ in range(n)]
+    objs = [make_organization() for _ in range(n)]
     return bench(lambda: [mr.dump(o) for o in objs])
 
 
 def run_load_mr(n: int):
-    dicts = [make_account_dict() for _ in range(n)]
-    return bench(lambda: [mr.load(Account, d) for d in dicts])
+    dicts = [make_organization_dict() for _ in range(n)]
+    return bench(lambda: [mr.load(Organization, d) for d in dicts])
 
 
 def run_dump_mr_nuked(n: int):
-    objs = [make_account() for _ in range(n)]
-    return bench(lambda: [mr.nuked.dump(Account, o) for o in objs])
+    objs = [make_organization() for _ in range(n)]
+    return bench(lambda: [mr.nuked.dump(Organization, o) for o in objs])
 
 
 def run_load_mr_nuked(n: int):
-    dicts = [make_account_dict() for _ in range(n)]
-    return bench(lambda: [mr.nuked.load(Account, d) for d in dicts])
+    dicts = [make_organization_dict() for _ in range(n)]
+    return bench(lambda: [mr.nuked.load(Organization, d) for d in dicts])
 
 
 def run_dump_pydantic(n: int):
-    objs = [make_account() for _ in range(n)]
-    return bench(lambda: [AccountAdapter.dump_python(o) for o in objs])
+    objs = [make_organization() for _ in range(n)]
+    return bench(lambda: [OrgAdapter.dump_python(o) for o in objs])
 
 
 def run_load_pydantic(n: int):
-    dicts = [make_account_dict() for _ in range(n)]
-    return bench(lambda: [AccountAdapter.validate_python(d) for d in dicts])
+    dicts = [make_organization_dict() for _ in range(n)]
+    return bench(lambda: [OrgAdapter.validate_python(d) for d in dicts])
 
 
 # ──────────────────────────────────────────────
-# 8. Table renderer
+# 6. Table renderer
 # ──────────────────────────────────────────────
 
 def render_table(rows: list[list[str]], headers: list[str]) -> str:
@@ -288,14 +317,14 @@ def render_table(rows: list[list[str]], headers: list[str]) -> str:
     def pad(cells):
         return [f" {c:<{widths[i]}} " for i, c in enumerate(cells)]
 
-    top = "┌" + "┬".join("─" * (w + 2) for w in widths) + "┐"
-    mid = "├" + "┼".join("─" * (w + 2) for w in widths) + "┤"
-    bot = "└" + "┴".join("─" * (w + 2) for w in widths) + "┘"
-    header = "│" + "│".join(pad(headers)) + "│"
+    top = "\u250c" + "\u252c".join("\u2500" * (w + 2) for w in widths) + "\u2510"
+    mid = "\u251c" + "\u253c".join("\u2500" * (w + 2) for w in widths) + "\u2524"
+    bot = "\u2514" + "\u2534".join("\u2500" * (w + 2) for w in widths) + "\u2518"
+    header = "\u2502" + "\u2502".join(pad(headers)) + "\u2502"
 
     lines = [top, header, mid]
     for i, row in enumerate(rows):
-        lines.append("│" + "│".join(pad(row)) + "│")
+        lines.append("\u2502" + "\u2502".join(pad(row)) + "\u2502")
         if i < len(rows) - 1:
             lines.append(mid)
     lines.append(bot)
@@ -303,7 +332,7 @@ def render_table(rows: list[list[str]], headers: list[str]) -> str:
 
 
 # ──────────────────────────────────────────────
-# 9. Main
+# 7. Main
 # ──────────────────────────────────────────────
 
 def main():
