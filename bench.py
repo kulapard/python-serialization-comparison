@@ -23,7 +23,17 @@ OrgAdapter = pydantic.TypeAdapter(Organization)
 
 
 # ──────────────────────────────────────────────
-# 4. Benchmark harness
+# Benchmark settings
+# ──────────────────────────────────────────────
+
+SCALES = [1, 100, 1000]
+MIN_ROUNDS = 10
+MAX_ROUNDS = 500
+BUDGET = 10.0  # seconds per benchmark
+
+
+# ──────────────────────────────────────────────
+# Benchmark harness
 # ──────────────────────────────────────────────
 
 class BenchResult:
@@ -36,7 +46,7 @@ class BenchResult:
         self.peak_memory = peak_memory  # bytes
 
 
-def bench(fn, *, min_rounds: int = 10, max_rounds: int = 500, budget: float = 10.0) -> BenchResult:
+def bench(fn, *, min_rounds: int = MIN_ROUNDS, max_rounds: int = MAX_ROUNDS, budget: float = BUDGET) -> BenchResult:
     """Return benchmark result with median time, round count, wall time, and peak memory."""
     # Measure peak memory on a single call
     gc.collect()
@@ -93,10 +103,9 @@ def speedup_str(base: float, other: float) -> str:
 
 
 # ──────────────────────────────────────────────
-# 5. Test data (generated once)
+# Test data (generated once)
 # ──────────────────────────────────────────────
 
-SCALES = [1, 100, 1000]
 _objs: dict[int, list] = {n: [make_organization() for _ in range(n)] for n in SCALES}
 _dicts: dict[int, list[dict]] = {n: [make_organization_dict() for _ in range(n)] for n in SCALES}
 _ma_schema = MaOrganizationSchema()
@@ -192,7 +201,7 @@ def main():
     }
     lib_names = list(lib_runners.keys())
 
-    # Print versions
+    # Print versions and settings
     ma_ver = importlib.metadata.version("marshmallow")
     mr_ver = importlib.metadata.version("marshmallow-recipe")
     pyd_ver = importlib.metadata.version("pydantic")
@@ -200,6 +209,11 @@ def main():
     print(f"  marshmallow        {ma_ver}")
     print(f"  marshmallow-recipe {mr_ver}")
     print(f"  pydantic           {pyd_ver}")
+    print()
+    print(f"  scales:     {SCALES}")
+    print(f"  min_rounds: {MIN_ROUNDS}")
+    print(f"  max_rounds: {MAX_ROUNDS}")
+    print(f"  budget:     {BUDGET}s")
     print()
 
     # Collect results
