@@ -55,7 +55,8 @@ def bench(fn, *, min_rounds: int = MIN_ROUNDS, max_rounds: int = MAX_ROUNDS, bud
     _, peak_memory = tracemalloc.get_traced_memory()
     tracemalloc.stop()
 
-    # Measure time
+    # Measure time (GC before start, then disabled during measurement)
+    gc.collect()
     gc.disable()
     try:
         times: list[float] = []
