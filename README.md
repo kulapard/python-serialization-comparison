@@ -223,11 +223,27 @@ Rust binary (`.so`) sizes:
 
 ### Key takeaways
 
+**Performance**
 - **pydantic v2** is the fastest overall (9-38x over marshmallow), powered by its Rust core
 - **marshmallow-recipe nuked** is a strong second (7-27x over marshmallow), powered by Rust via PyO3
 - **marshmallow-recipe standard** (`mr.dump`/`mr.load`) is ~5-6x *slower* than raw marshmallow for dump, roughly equal for load
 - The **nuked** backend of marshmallow-recipe is 21-56x faster than its standard backend
 - Performance gaps **widen with deeper nesting** compared to flat models
+
+**Installed size**
+- **marshmallow** is the lightest at 0.4 MB — pure Python, zero compiled code
+- **marshmallow-recipe** is 1.7 MB total (with marshmallow); its Rust binary is only 0.7 MB — 5.7x smaller than pydantic-core's
+- **pydantic** is the heaviest at 8.1 MB (with pydantic-core) — nearly 5x larger than marshmallow-recipe, though the Rust core is what makes it the fastest
+
+**Features**
+- **pydantic** has the richest feature set: JSON Schema, OpenAPI, strict mode, discriminated unions, computed fields, generics, direct JSON string serialization, and the widest field type coverage
+- **marshmallow** offers the most flexible hook system (pre/post load/dump), partial loading, and a mature plugin ecosystem (apispec, marshmallow-jsonschema)
+- **marshmallow-recipe** is the most ergonomic for dataclass-heavy codebases: zero boilerplate schema definitions, built-in naming conventions (camelCase, UPPER_SNAKE), and JSON Schema generation — all while staying compatible with the marshmallow ecosystem
+
+**When to use what**
+- **pydantic** — best overall choice when performance, features, and JSON/OpenAPI integration matter most, and install size is not a concern
+- **marshmallow-recipe (nuked)** — best for dataclass-centric projects that need fast serialization with a small footprint, especially when already using marshmallow
+- **marshmallow** — best when you need maximum control over schema behavior, custom hooks, or have an existing marshmallow-based codebase
 
 ## Running
 
