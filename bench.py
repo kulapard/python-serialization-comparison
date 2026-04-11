@@ -25,25 +25,32 @@ OrgAdapter = pydantic.TypeAdapter(Organization)
 # 4. Benchmark harness
 # ──────────────────────────────────────────────
 
-def bench(fn, *, min_rounds: int = 10, max_rounds: int = 500, budget: float = 10.0):
-    """Return median execution time in seconds.
+class BenchResult:
+    __slots__ = ("median", "rounds", "total_time")
 
-    Runs at least *min_rounds* iterations but stops after *budget* seconds
-    or *max_rounds* iterations, whichever comes first.
-    """
+    def __init__(self, median: float, rounds: int, total_time: float):
+        self.median = median
+        self.rounds = rounds
+        self.total_time = total_time
+
+
+def bench(fn, *, min_rounds: int = 10, max_rounds: int = 500, budget: float = 10.0) -> BenchResult:
+    """Return benchmark result with median time, round count, and wall time."""
     gc.disable()
     try:
         times: list[float] = []
-        deadline = time.perf_counter() + budget
+        t_start = time.perf_counter()
+        deadline = t_start + budget
         while len(times) < min_rounds or time.perf_counter() < deadline:
             t0 = time.perf_counter()
             fn()
             times.append(time.perf_counter() - t0)
             if len(times) >= max_rounds:
                 break
+        total_time = time.perf_counter() - t_start
     finally:
         gc.enable()
-    return statistics.median(times)
+    return BenchResult(statistics.median(times), len(times), total_time)
 
 
 def fmt_time(seconds: float) -> str:
@@ -188,9 +195,9 @@ def main():
                 done += 1
                 tag = f"{op} x {n:<4} [{lib}]"
                 print(f"  [{done:>2}/{total}] {tag:40s} ...", end="", flush=True)
-                t = lib_runners[lib][op](n)
-                results[op][n][lib] = t
-                print(f" {fmt_time(t)}")
+                r = lib_runners[lib][op](n)
+                results[op][n][lib] = r.median
+                print(f" {fmt_time(r.median):>10s}  ({r.rounds} rounds in {fmt_time(r.total_time)})")
 
     # ── Pairwise comparison tables ──
     comparisons = [
