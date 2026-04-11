@@ -239,6 +239,7 @@ def main():
     print()
 
     # Collect results
+    t_run_start = time.perf_counter()
     results: dict[str, dict[int, dict[str, float]]] = {}
     memory: dict[str, dict[int, dict[str, int]]] = {}
     total = len(operations) * len(scales) * len(lib_names)
@@ -343,6 +344,9 @@ def main():
     print()
     for line in render_table(rows, headers).splitlines():
         print(f"  {line}")
+    print()
+
+    print(f"  Total run time: {fmt_time(time.perf_counter() - t_run_start)}")
     print()
 
 
