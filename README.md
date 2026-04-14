@@ -8,7 +8,7 @@ All libraries operate on the same plain `@dataclasses.dataclass` types — no li
 
 | | marshmallow | marshmallow-recipe | mr-recipe nuked | pydantic |
 |---|:---:|:---:|:---:|:---:|
-| **Speed (vs marshmallow)** | 1x | ~1.3x load / 0.2x dump | 6-17x | 10-30x |
+| **Speed (vs marshmallow)** | 1x | ~1.3x load / 0.2x dump | 6-21x | 10-24x |
 | **Install size** | 0.4 MB | 1.7 MB | _(included)_ | 8.1 MB |
 | **Backend** | Pure Python | Pure Python | Rust (PyO3) | Rust (pydantic-core) |
 | **Schema definition** | Hand-written | Auto from dataclasses | _(same)_ | Auto (multiple ways) |
@@ -51,7 +51,7 @@ A single `Organization` object contains **2 departments x 2 teams x 2 employees*
 
 | Parameter | Value |
 |---|---|
-| Date | 2026-04-11 |
+| Date | 2026-04-14 |
 | Machine | Apple M1 Pro (8 cores), 32 GB RAM |
 | OS | macOS 26.3.1 (arm64) |
 | Python | 3.14.0 |
@@ -68,17 +68,17 @@ A single `Organization` object contains **2 departments x 2 teams x 2 employees*
 ┌─────────────┬─────────────┬───────────┬─────────────────┬──────────┐
 │ Operation   │ marshmallow │ mr-recipe │ mr-recipe-nuked │ pydantic │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
-│ dump x 1    │ 3.3 ms      │ 14.6 ms   │ 538.9 us        │ 299.0 us │
+│ dump x 1    │ 3.3 ms      │ 14.9 ms   │ 498.8 us        │ 300.8 us │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
-│ dump x 100  │ 333.0 ms    │ 1.48 s    │ 59.7 ms         │ 32.8 ms  │
+│ dump x 100  │ 342.1 ms    │ 1.50 s    │ 54.2 ms         │ 32.9 ms  │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
-│ dump x 1000 │ 3.34 s      │ 15.13 s   │ 610.0 ms        │ 342.3 ms │
+│ dump x 1000 │ 3.41 s      │ 15.27 s   │ 572.7 ms        │ 352.3 ms │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
-│ load x 1    │ 13.1 ms     │ 10.1 ms   │ 786.5 us        │ 434.4 us │
+│ load x 1    │ 13.4 ms     │ 10.4 ms   │ 633.3 us        │ 555.6 us │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
-│ load x 100  │ 1.28 s      │ 1.01 s    │ 82.7 ms         │ 48.9 ms  │
+│ load x 100  │ 1.35 s      │ 1.05 s    │ 65.1 ms         │ 57.4 ms  │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
-│ load x 1000 │ 12.90 s     │ 9.95 s    │ 824.0 ms        │ 497.3 ms │
+│ load x 1000 │ 12.98 s     │ 10.17 s   │ 654.2 ms        │ 575.8 ms │
 └─────────────┴─────────────┴───────────┴─────────────────┴──────────┘
 ```
 
@@ -88,17 +88,17 @@ A single `Organization` object contains **2 departments x 2 teams x 2 employees*
 ┌─────────────┬──────────────┬────────────────────┬─────────────┐
 │ Operation   │ vs mr-recipe │ vs mr-recipe-nuked │ vs pydantic │
 ├─────────────┼──────────────┼────────────────────┼─────────────┤
-│ dump x 1    │ 1/4.5x       │ 6.1x               │ 10.9x       │
+│ dump x 1    │ 1/4.5x       │ 6.6x               │ 11.0x       │
 ├─────────────┼──────────────┼────────────────────┼─────────────┤
-│ dump x 100  │ 1/4.5x       │ 5.6x               │ 10.2x       │
+│ dump x 100  │ 1/4.4x       │ 6.3x               │ 10.4x       │
 ├─────────────┼──────────────┼────────────────────┼─────────────┤
-│ dump x 1000 │ 1/4.5x       │ 5.5x               │ 9.8x        │
+│ dump x 1000 │ 1/4.5x       │ 6.0x               │ 9.7x        │
 ├─────────────┼──────────────┼────────────────────┼─────────────┤
-│ load x 1    │ 1.3x         │ 16.6x              │ 30.1x       │
+│ load x 1    │ 1.3x         │ 21.1x              │ 24.1x       │
 ├─────────────┼──────────────┼────────────────────┼─────────────┤
-│ load x 100  │ 1.3x         │ 15.5x              │ 26.2x       │
+│ load x 100  │ 1.3x         │ 20.7x              │ 23.5x       │
 ├─────────────┼──────────────┼────────────────────┼─────────────┤
-│ load x 1000 │ 1.3x         │ 15.7x              │ 25.9x       │
+│ load x 1000 │ 1.3x         │ 19.8x              │ 22.5x       │
 └─────────────┴──────────────┴────────────────────┴─────────────┘
 ```
 
@@ -108,17 +108,17 @@ A single `Organization` object contains **2 departments x 2 teams x 2 employees*
 ┌─────────────┬───────────┬─────────────────┬─────────┐
 │ Operation   │ mr-recipe │ mr-recipe-nuked │ Speedup │
 ├─────────────┼───────────┼─────────────────┼─────────┤
-│ dump x 1    │ 14.6 ms   │ 538.9 us        │ 27.2x   │
+│ dump x 1    │ 14.9 ms   │ 498.8 us        │ 29.8x   │
 ├─────────────┼───────────┼─────────────────┼─────────┤
-│ dump x 100  │ 1.48 s    │ 59.7 ms         │ 24.9x   │
+│ dump x 100  │ 1.50 s    │ 54.2 ms         │ 27.7x   │
 ├─────────────┼───────────┼─────────────────┼─────────┤
-│ dump x 1000 │ 15.13 s   │ 610.0 ms        │ 24.8x   │
+│ dump x 1000 │ 15.27 s   │ 572.7 ms        │ 26.7x   │
 ├─────────────┼───────────┼─────────────────┼─────────┤
-│ load x 1    │ 10.1 ms   │ 786.5 us        │ 12.8x   │
+│ load x 1    │ 10.4 ms   │ 633.3 us        │ 16.5x   │
 ├─────────────┼───────────┼─────────────────┼─────────┤
-│ load x 100  │ 1.01 s    │ 82.7 ms         │ 12.2x   │
+│ load x 100  │ 1.05 s    │ 65.1 ms         │ 16.2x   │
 ├─────────────┼───────────┼─────────────────┼─────────┤
-│ load x 1000 │ 9.95 s    │ 824.0 ms        │ 12.1x   │
+│ load x 1000 │ 10.17 s   │ 654.2 ms        │ 15.5x   │
 └─────────────┴───────────┴─────────────────┴─────────┘
 ```
 
@@ -146,17 +146,17 @@ Rust binary (`.so`) sizes:
 ┌─────────────┬─────────────┬───────────┬─────────────────┬──────────┐
 │ Operation   │ marshmallow │ mr-recipe │ mr-recipe-nuked │ pydantic │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
-│ dump x 1    │ 484.5 KB    │ 1.4 MB    │ 241.0 KB        │ 178.0 KB │
+│ dump x 1    │ 487.9 KB    │ 1.4 MB    │ 243.6 KB        │ 178.0 KB │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
 │ dump x 100  │ 22.6 MB     │ 21.9 MB   │ 21.4 MB         │ 17.3 MB  │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
 │ dump x 1000 │ 226.1 MB    │ 217.0 MB  │ 214.3 MB        │ 173.1 MB │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
-│ load x 1    │ 195.2 KB    │ 193.0 KB  │ 185.0 KB        │ 319.4 KB │
+│ load x 1    │ 173.2 KB    │ 171.0 KB  │ 162.0 KB        │ 134.7 KB │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
-│ load x 100  │ 15.5 MB     │ 15.8 MB   │ 15.5 MB         │ 31.1 MB  │
+│ load x 100  │ 13.3 MB     │ 13.6 MB   │ 13.3 MB         │ 13.0 MB  │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
-│ load x 1000 │ 154.4 MB    │ 157.6 MB  │ 155.1 MB        │ 311.4 MB │
+│ load x 1000 │ 132.4 MB    │ 135.7 MB  │ 133.1 MB        │ 129.9 MB │
 └─────────────┴─────────────┴───────────┴─────────────────┴──────────┘
 ```
 
@@ -258,15 +258,15 @@ Rust binary (`.so`) sizes:
 ### Key takeaways
 
 **Performance**
-- **pydantic v2** is the fastest overall (10-30x over marshmallow), powered by its Rust core
-- **marshmallow-recipe nuked** is a strong second (6-17x over marshmallow), powered by Rust via PyO3
+- **pydantic v2** is the fastest overall (10-24x over marshmallow), powered by its Rust core
+- **marshmallow-recipe nuked** is a strong second (6-21x over marshmallow), powered by Rust via PyO3
 - **marshmallow-recipe standard** (`mr.dump`/`mr.load`) is ~4.5x *slower* than raw marshmallow for dump, ~1.3x faster for load
-- The **nuked** backend of marshmallow-recipe is 12-27x faster than its standard backend
+- The **nuked** backend of marshmallow-recipe is 15-30x faster than its standard backend
 - Performance gaps **widen with deeper nesting** compared to flat models
 
 **Peak memory**
 - For **dump**, all libraries use similar memory at scale; pydantic is the most memory-efficient (~173 MB for 1000 objects vs ~226 MB for marshmallow)
-- For **load**, pydantic uses **2x more memory** than the others (311 MB vs ~155 MB for 1000 objects) — the Rust core creates richer internal representations
+- For **load**, all libraries use similar memory (~130-136 MB for 1000 objects); pydantic is slightly the most efficient at 129.9 MB
 - At small scale (x 1), all libraries are lightweight (<500 KB), except mr-recipe standard dump (1.4 MB)
 
 **Installed size**
