@@ -62,7 +62,7 @@ class Currency(str, enum.Enum):
 
 # ── L10: Author (10 fields) ──
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class Author:
     id: str
     username: str
@@ -78,7 +78,7 @@ class Author:
 
 # ── L9: Reaction (10 fields) ──
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class Reaction:
     id: str
     emoji: str
@@ -94,7 +94,7 @@ class Reaction:
 
 # ── L8: Comment (11 fields) ──
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class Comment:
     id: str
     text: str
@@ -111,7 +111,7 @@ class Comment:
 
 # ── L7: SubTask (11 fields) ──
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class SubTask:
     id: str
     title: str
@@ -128,7 +128,7 @@ class SubTask:
 
 # ── L7: Clause (10 fields) ──
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class Clause:
     id: str
     title: str
@@ -144,7 +144,7 @@ class Clause:
 
 # ── L6: Task (11 fields) ──
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class Task:
     id: str
     title: str
@@ -161,7 +161,7 @@ class Task:
 
 # ── L6: Terms (10 fields) ──
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class Terms:
     id: str
     title: str
@@ -177,7 +177,7 @@ class Terms:
 
 # ── L5: Project (11 fields) ──
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class Project:
     id: str
     name: str
@@ -194,7 +194,7 @@ class Project:
 
 # ── L5: Contract (11 fields) ──
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class Contract:
     id: str
     title: str
@@ -211,7 +211,7 @@ class Contract:
 
 # ── L4: Employee (12 fields) ──
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class Employee:
     id: str
     name: str
@@ -230,7 +230,7 @@ class Employee:
 
 # ── L3: Team (10 fields) ──
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class Team:
     id: str
     name: str
@@ -246,7 +246,7 @@ class Team:
 
 # ── L2: Department (10 fields) ──
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class Department:
     id: str
     name: str
@@ -262,7 +262,7 @@ class Department:
 
 # ── L1: Organization (11 fields) ──
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class Organization:
     id: str
     name: str
