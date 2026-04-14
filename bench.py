@@ -32,6 +32,7 @@ OrgAdapter = pydantic.TypeAdapter(Organization)
 # ──────────────────────────────────────────────
 
 SCALES = [1, 100, 1000]
+WARMUP_ROUNDS = 5
 MIN_ROUNDS = 10
 MAX_ROUNDS = 500
 BUDGET = 10.0  # seconds per benchmark
@@ -51,8 +52,12 @@ class BenchResult:
         self.peak_memory = peak_memory  # bytes
 
 
-def bench(fn, *, min_rounds: int = MIN_ROUNDS, max_rounds: int = MAX_ROUNDS, budget: float = BUDGET) -> BenchResult:
+def bench(fn, *, warmup: int = WARMUP_ROUNDS, min_rounds: int = MIN_ROUNDS, max_rounds: int = MAX_ROUNDS, budget: float = BUDGET) -> BenchResult:
     """Return benchmark result with median time, round count, wall time, and peak memory."""
+    # Warmup: prime internal caches before measuring
+    for _ in range(warmup):
+        fn()
+
     # Measure peak memory on a single call
     gc.collect()
     tracemalloc.start()
@@ -233,6 +238,7 @@ def main():
     print(f"  pydantic           {pyd_ver}")
     print()
     print(f"  scales:     {SCALES}")
+    print(f"  warmup:     {WARMUP_ROUNDS}")
     print(f"  min_rounds: {MIN_ROUNDS}")
     print(f"  max_rounds: {MAX_ROUNDS}")
     print(f"  budget:     {BUDGET}s")
