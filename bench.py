@@ -32,7 +32,7 @@ OrgAdapter = pydantic.TypeAdapter(Organization)
 # ──────────────────────────────────────────────
 
 SCALES = [1, 100, 1000]
-WARMUP_ROUNDS = 5
+WARMUP_ROUNDS = 3
 MIN_ROUNDS = 10
 MAX_ROUNDS = 500
 BUDGET = 10.0  # seconds per benchmark

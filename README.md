@@ -8,7 +8,7 @@ All libraries operate on the same plain `@dataclasses.dataclass` types — no li
 
 | | marshmallow | marshmallow-recipe | mr-recipe nuked | pydantic |
 |---|:---:|:---:|:---:|:---:|
-| **Speed (vs marshmallow)** | 1x | ~1.3x load / 0.2x dump | 6-21x | 10-24x |
+| **Speed (vs marshmallow)** | 1x | ~1.3x load / 0.2x dump | 6-21x | 10-26x |
 | **Install size** | 0.4 MB | 1.7 MB | _(included)_ | 8.1 MB |
 | **Backend** | Pure Python | Pure Python | Rust (PyO3) | Rust (pydantic-core) |
 | **Schema definition** | Hand-written | Auto from dataclasses | _(same)_ | Auto (multiple ways) |
@@ -43,22 +43,23 @@ A single `Organization` object contains **2 departments x 2 teams x 2 employees*
 | Library | Version | Backend | How it's used |
 |---|---|---|---|
 | **marshmallow** | 3.26.2 | Pure Python | Hand-written `Schema` classes with `@post_load` |
-| **marshmallow-recipe** | 0.0.93 | Pure Python | `mr.dump(obj)` / `mr.load(Cls, data)` — auto-generated from dataclasses |
-| **marshmallow-recipe (nuked)** | 0.0.93 | Rust (PyO3) | `mr.nuked.dump(Cls, obj)` / `mr.nuked.load(Cls, data)` |
-| **pydantic** | 2.12.5 | Rust (pydantic-core) | `TypeAdapter(Cls).dump_python(obj)` / `.validate_python(data)` |
+| **marshmallow-recipe** | 0.0.94 | Pure Python | `mr.dump(obj)` / `mr.load(Cls, data)` — auto-generated from dataclasses |
+| **marshmallow-recipe (nuked)** | 0.0.94 | Rust (PyO3) | `mr.nuked.dump(Cls, obj)` / `mr.nuked.load(Cls, data)` |
+| **pydantic** | 2.13.0 | Rust (pydantic-core) | `TypeAdapter(Cls).dump_python(obj)` / `.validate_python(data)` |
 
 ## Test conditions
 
 | Parameter | Value |
 |---|---|
-| Date | 2026-04-14 |
+| Date | 2026-04-15 |
 | Machine | Apple M1 Pro (8 cores), 32 GB RAM |
 | OS | macOS 26.3.1 (arm64) |
 | Python | 3.14.0 |
+| Warmup | 3 rounds before each benchmark |
 | Timing | Median of adaptive runs (min 10 / max 500 rounds, 10 s budget) |
 | GC | `gc.collect()` before each test, disabled during measurement |
 | Scales | 1, 100, 1000 objects per call |
-| Total run time | ~15 min |
+| Total run time | ~18 min |
 
 ## Results
 
@@ -68,17 +69,17 @@ A single `Organization` object contains **2 departments x 2 teams x 2 employees*
 ┌─────────────┬─────────────┬───────────┬─────────────────┬──────────┐
 │ Operation   │ marshmallow │ mr-recipe │ mr-recipe-nuked │ pydantic │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
-│ dump x 1    │ 3.3 ms      │ 14.9 ms   │ 498.8 us        │ 300.8 us │
+│ dump x 1    │ 4.2 ms      │ 19.2 ms   │ 647.5 us        │ 396.5 us │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
-│ dump x 100  │ 342.1 ms    │ 1.50 s    │ 54.2 ms         │ 32.9 ms  │
+│ dump x 100  │ 436.0 ms    │ 1.98 s    │ 56.5 ms         │ 34.7 ms  │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
-│ dump x 1000 │ 3.41 s      │ 15.27 s   │ 572.7 ms        │ 352.3 ms │
+│ dump x 1000 │ 3.43 s      │ 14.93 s   │ 576.6 ms        │ 354.8 ms │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
-│ load x 1    │ 13.4 ms     │ 10.4 ms   │ 633.3 us        │ 555.6 us │
+│ load x 1    │ 13.1 ms     │ 10.4 ms   │ 628.7 us        │ 512.0 us │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
-│ load x 100  │ 1.35 s      │ 1.05 s    │ 65.1 ms         │ 57.4 ms  │
+│ load x 100  │ 1.31 s      │ 1.03 s    │ 64.9 ms         │ 53.0 ms  │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
-│ load x 1000 │ 12.98 s     │ 10.17 s   │ 654.2 ms        │ 575.8 ms │
+│ load x 1000 │ 12.98 s     │ 10.34 s   │ 647.6 ms        │ 534.6 ms │
 └─────────────┴─────────────┴───────────┴─────────────────┴──────────┘
 ```
 
@@ -88,17 +89,17 @@ A single `Organization` object contains **2 departments x 2 teams x 2 employees*
 ┌─────────────┬──────────────┬────────────────────┬─────────────┐
 │ Operation   │ vs mr-recipe │ vs mr-recipe-nuked │ vs pydantic │
 ├─────────────┼──────────────┼────────────────────┼─────────────┤
-│ dump x 1    │ 1/4.5x       │ 6.6x               │ 11.0x       │
+│ dump x 1    │ 1/4.5x       │ 6.5x               │ 10.7x       │
 ├─────────────┼──────────────┼────────────────────┼─────────────┤
-│ dump x 100  │ 1/4.4x       │ 6.3x               │ 10.4x       │
+│ dump x 100  │ 1/4.5x       │ 7.7x               │ 12.6x       │
 ├─────────────┼──────────────┼────────────────────┼─────────────┤
-│ dump x 1000 │ 1/4.5x       │ 6.0x               │ 9.7x        │
+│ dump x 1000 │ 1/4.4x       │ 5.9x               │ 9.7x        │
 ├─────────────┼──────────────┼────────────────────┼─────────────┤
-│ load x 1    │ 1.3x         │ 21.1x              │ 24.1x       │
+│ load x 1    │ 1.3x         │ 20.9x              │ 25.7x       │
 ├─────────────┼──────────────┼────────────────────┼─────────────┤
-│ load x 100  │ 1.3x         │ 20.7x              │ 23.5x       │
+│ load x 100  │ 1.3x         │ 20.3x              │ 24.8x       │
 ├─────────────┼──────────────┼────────────────────┼─────────────┤
-│ load x 1000 │ 1.3x         │ 19.8x              │ 22.5x       │
+│ load x 1000 │ 1.3x         │ 20.0x              │ 24.3x       │
 └─────────────┴──────────────┴────────────────────┴─────────────┘
 ```
 
@@ -108,17 +109,17 @@ A single `Organization` object contains **2 departments x 2 teams x 2 employees*
 ┌─────────────┬───────────┬─────────────────┬─────────┐
 │ Operation   │ mr-recipe │ mr-recipe-nuked │ Speedup │
 ├─────────────┼───────────┼─────────────────┼─────────┤
-│ dump x 1    │ 14.9 ms   │ 498.8 us        │ 29.8x   │
+│ dump x 1    │ 19.2 ms   │ 647.5 us        │ 29.7x   │
 ├─────────────┼───────────┼─────────────────┼─────────┤
-│ dump x 100  │ 1.50 s    │ 54.2 ms         │ 27.7x   │
+│ dump x 100  │ 1.98 s    │ 56.5 ms         │ 35.0x   │
 ├─────────────┼───────────┼─────────────────┼─────────┤
-│ dump x 1000 │ 15.27 s   │ 572.7 ms        │ 26.7x   │
+│ dump x 1000 │ 14.93 s   │ 576.6 ms        │ 25.9x   │
 ├─────────────┼───────────┼─────────────────┼─────────┤
-│ load x 1    │ 10.4 ms   │ 633.3 us        │ 16.5x   │
+│ load x 1    │ 10.4 ms   │ 628.7 us        │ 16.5x   │
 ├─────────────┼───────────┼─────────────────┼─────────┤
-│ load x 100  │ 1.05 s    │ 65.1 ms         │ 16.2x   │
+│ load x 100  │ 1.03 s    │ 64.9 ms         │ 15.9x   │
 ├─────────────┼───────────┼─────────────────┼─────────┤
-│ load x 1000 │ 10.17 s   │ 654.2 ms        │ 15.5x   │
+│ load x 1000 │ 10.34 s   │ 647.6 ms        │ 16.0x   │
 └─────────────┴───────────┴─────────────────┴─────────┘
 ```
 
@@ -146,13 +147,13 @@ Rust binary (`.so`) sizes:
 ┌─────────────┬─────────────┬───────────┬─────────────────┬──────────┐
 │ Operation   │ marshmallow │ mr-recipe │ mr-recipe-nuked │ pydantic │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
-│ dump x 1    │ 487.9 KB    │ 1.4 MB    │ 243.6 KB        │ 178.0 KB │
+│ dump x 1    │ 239.0 KB    │ 403.9 KB  │ 220.8 KB        │ 178.0 KB │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
 │ dump x 100  │ 22.6 MB     │ 21.9 MB   │ 21.4 MB         │ 17.3 MB  │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
 │ dump x 1000 │ 226.1 MB    │ 217.0 MB  │ 214.3 MB        │ 173.1 MB │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
-│ load x 1    │ 173.2 KB    │ 171.0 KB  │ 162.0 KB        │ 134.7 KB │
+│ load x 1    │ 169.9 KB    │ 171.0 KB  │ 137.2 KB        │ 134.6 KB │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
 │ load x 100  │ 13.3 MB     │ 13.6 MB   │ 13.3 MB         │ 13.0 MB  │
 ├─────────────┼─────────────┼───────────┼─────────────────┼──────────┤
@@ -258,16 +259,16 @@ Rust binary (`.so`) sizes:
 ### Key takeaways
 
 **Performance**
-- **pydantic v2** is the fastest overall (10-24x over marshmallow), powered by its Rust core
+- **pydantic v2** is the fastest overall (10-26x over marshmallow), powered by its Rust core
 - **marshmallow-recipe nuked** is a strong second (6-21x over marshmallow), powered by Rust via PyO3
 - **marshmallow-recipe standard** (`mr.dump`/`mr.load`) is ~4.5x *slower* than raw marshmallow for dump, ~1.3x faster for load
-- The **nuked** backend of marshmallow-recipe is 15-30x faster than its standard backend
+- The **nuked** backend of marshmallow-recipe is 16-35x faster than its standard backend
 - Performance gaps **widen with deeper nesting** compared to flat models
 
 **Peak memory**
 - For **dump**, all libraries use similar memory at scale; pydantic is the most memory-efficient (~173 MB for 1000 objects vs ~226 MB for marshmallow)
 - For **load**, all libraries use similar memory (~130-136 MB for 1000 objects); pydantic is slightly the most efficient at 129.9 MB
-- At small scale (x 1), all libraries are lightweight (<500 KB), except mr-recipe standard dump (1.4 MB)
+- At small scale (x 1), all libraries are lightweight (<500 KB)
 
 **Installed size**
 - **marshmallow** is the lightest at 0.4 MB — pure Python, zero compiled code

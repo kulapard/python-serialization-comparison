@@ -5,8 +5,8 @@ description = "Comparison of marshmallow, marshmallow-recipe, and pydantic — p
 requires-python = ">=3.12"
 dependencies = [
     "marshmallow==3.26.2",
-    "marshmallow-recipe==0.0.93",
-    "pydantic==2.12.5",
+    "marshmallow-recipe==0.0.94",
+    "pydantic==2.13.0",
 ]
 
 [project.scripts]
