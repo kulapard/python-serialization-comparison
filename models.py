@@ -26,6 +26,10 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
 
+import marshmallow_recipe as mr
+
+_decimal_meta = mr.decimal_meta(places=None)
+
 
 # ── Enums ──
 
@@ -88,7 +92,7 @@ class Reaction:
     count: int
     active: bool
     category: str
-    weight: Decimal
+    weight: Decimal = dataclasses.field(metadata=_decimal_meta)
     source: Optional[str] = None
 
 
@@ -118,8 +122,8 @@ class SubTask:
     description: str
     done: bool
     priority: Priority
-    estimated_hours: Decimal
-    actual_hours: Decimal
+    estimated_hours: Decimal = dataclasses.field(metadata=_decimal_meta)
+    actual_hours: Decimal = dataclasses.field(metadata=_decimal_meta)
     assignee: str
     created_at: date
     comment: Comment
@@ -139,7 +143,7 @@ class Clause:
     effective_date: date
     language: str
     category: str
-    penalty_amount: Optional[Decimal] = None
+    penalty_amount: Optional[Decimal] = dataclasses.field(default=None, metadata=_decimal_meta)
 
 
 # ── L6: Task (11 fields) ──
@@ -153,7 +157,7 @@ class Task:
     status: Status
     created_at: datetime
     due_date: date
-    estimated_hours: Decimal
+    estimated_hours: Decimal = dataclasses.field(metadata=_decimal_meta)
     assignee: str
     tags: list[str]
     subtasks: list[SubTask]
@@ -182,8 +186,8 @@ class Project:
     id: str
     name: str
     code: str
-    budget: Decimal
-    spent: Decimal
+    budget: Decimal = dataclasses.field(metadata=_decimal_meta)
+    spent: Decimal = dataclasses.field(metadata=_decimal_meta)
     currency: Currency
     started_at: date
     status: Status
@@ -200,7 +204,7 @@ class Contract:
     title: str
     contract_number: str
     signed_at: datetime
-    value: Decimal
+    value: Decimal = dataclasses.field(metadata=_decimal_meta)
     currency: Currency
     status: Status
     counterparty: str
@@ -218,7 +222,7 @@ class Employee:
     email: str
     phone: str
     hired_at: date
-    salary: Decimal
+    salary: Decimal = dataclasses.field(metadata=_decimal_meta)
     currency: Currency
     role: Role
     active: bool
@@ -252,7 +256,7 @@ class Department:
     name: str
     code: str
     floor: int
-    budget: Decimal
+    budget: Decimal = dataclasses.field(metadata=_decimal_meta)
     head_name: str
     head_email: str
     status: Status
@@ -273,7 +277,7 @@ class Organization:
     tax_id: str
     country: str
     employee_count: int
-    annual_revenue: Decimal
+    annual_revenue: Decimal = dataclasses.field(metadata=_decimal_meta)
     departments: list[Department]
 
 
